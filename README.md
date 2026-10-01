@@ -1,130 +1,79 @@
-# clothing-store-management
-Simple Clothing Store Management System using Python and SQL Server
+# Clothing Store Management System
 
+A simple console-based system for managing a clothing store's inventory and sales, built with **Python** and **SQL Server**.
 
-import pyodbc
+## Features
 
-connection = pyodbc.connect(
-    "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=localhost;"
-    "DATABASE=StoreDB;"
-    "Trusted_Connection=yes;"
-)
+- View all products in stock
+- Add new products (name, price, quantity)
+- Search for products by name
+- Sell products with automatic stock deduction
+- Validation: prevents selling more than the available quantity
+- Every sale is recorded in a `Sales` table
 
-cursor = connection.cursor()
+## Tech Stack
 
+- Python 3
+- SQL Server (T-SQL)
+- pyodbc
 
-def show_products():
-    cursor.execute("SELECT * FROM Products")
-    products = cursor.fetchall()
+## Database Setup
 
-    print("\n--- Products ---")
+Run this in SQL Server Management Studio (SSMS):
 
-    for product in products:
-        print(
-            f"ID: {product.ProductID} | "
-            f"Name: {product.ProductName} | "
-            f"Price: {product.Price} | "
-            f"Quantity: {product.Quantity}"
-        )
+```sql
+CREATE DATABASE StoreDB;
+GO
+USE StoreDB;
+GO
 
+CREATE TABLE Products (
+    ProductID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductName NVARCHAR(100) NOT NULL,
+    Price DECIMAL(10,2) NOT NULL,
+    Quantity INT NOT NULL
+);
 
-def add_product():
-    name = input("Product name: ")
-    price = float(input("Price: "))
-    quantity = int(input("Quantity: "))
+CREATE TABLE Sales (
+    SaleID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductID INT NOT NULL FOREIGN KEY REFERENCES Products(ProductID),
+    QuantitySold INT NOT NULL,
+    SaleDate DATETIME DEFAULT GETDATE()
+);
+```
 
-    cursor.execute(
-        "INSERT INTO Products (ProductName, Price, Quantity) VALUES (?, ?, ?)",
-        name, price, quantity
-    )
+## Installation & Run
 
-    connection.commit()
-    print("Product added successfully!")
+1. Install the requirements:
+   ```bash
+   pip install pyodbc
+   ```
+2. Install **ODBC Driver 17 for SQL Server**.
+3. Create the database using the script above.
+4. Run the program:
+   ```bash
+   python main.py
+   ```
 
+## Usage
 
-def search_product():
-    name = input("Enter product name: ")
+```
+===== STORE MANAGEMENT SYSTEM =====
+1. Show Products
+2. Add Product
+3. Search Product
+4. Sell Product
+5. Exit
+```
 
-    cursor.execute(
-        "SELECT * FROM Products WHERE ProductName LIKE ?",
-        "%" + name + "%"
-    )
+## Future Improvements
 
-    products = cursor.fetchall()
+- Sales reports (daily / monthly revenue)
+- Low-stock alerts
+- Delete / update products
+- GUI or web interface
 
-    for product in products:
-        print(
-            f"ID: {product.ProductID} | "
-            f"Name: {product.ProductName} | "
-            f"Price: {product.Price} | "
-            f"Quantity: {product.Quantity}"
-        )
-def sell_product():
-    product_id = int(input("Enter product ID: "))
-    quantity_sold = int(input("Quantity sold: "))
+## Author
 
-    cursor.execute(
-        "SELECT Quantity FROM Products WHERE ProductID = ?",
-        product_id
-    )
-
-    product = cursor.fetchone()
-
-    if product is None:
-        print("Product not found!")
-        return
-
-    if product.Quantity < quantity_sold:
-        print("Not enough quantity!")
-        return
-
-    # تسجيل عملية البيع
-    cursor.execute(
-        "INSERT INTO Sales (ProductID, QuantitySold) VALUES (?, ?)",
-        product_id, quantity_sold
-    )
-
-    # تقليل الكمية من المخزن
-    cursor.execute(
-        "UPDATE Products SET Quantity = Quantity - ? WHERE ProductID = ?",
-        quantity_sold, product_id
-    )
-
-    connection.commit()
-
-    print("Sale completed successfully!")
-    
-
-while True:
-
-    print("\n===== STORE MANAGEMENT SYSTEM =====")
-    print("1. Show Products")
-    print("2. Add Product")
-    print("3. Search Product")
-    print("4. Sell Product")
-    print("5. Exit")
-
-    choice = input("Choose: ")
-
-    if choice == "1":
-        show_products()
-
-    elif choice == "2":
-        add_product()
-
-    elif choice == "3":
-        search_product()
-
-    elif choice == "4":
-        sell_product()
-
-    elif choice == "5":
-        print("Goodbye!")
-        break
-
-    else:
-        print("Invalid choice!")
-
-
-connection.close()
+**Hussein Junaidy Hussein**
+[LinkedIn](https://linkedin.com/in/hussein-geindy-951b6137b)
